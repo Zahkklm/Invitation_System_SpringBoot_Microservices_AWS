@@ -1,0 +1,54 @@
+### IDE - VS Code ###
+.vscode/
+*.code-workspace
+.settings/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Gradle ###
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
+!gradlew.bat
+
+### Build output ###
+bin/
+target/
+
+### Logs ###
+logs/
+*.log
+
+### OS generated files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### Java ###
+*.class
+*.war
+*.ear
+
+### Kotlin ###
+*.kotlin_module
+
+### Spring Boot ###
+application-*.yml
+application-*.properties
+!application.yml
+!application.properties
+
+### Environment Variables ###
+.env
+.env.local
