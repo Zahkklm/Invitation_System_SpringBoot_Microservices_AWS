@@ -1,0 +1,59 @@
+package com.digitopia.user.model
+
+import jakarta.persistence.*
+import org.hibernate.annotations.GenericGenerator
+import java.time.LocalDateTime
+import java.util.UUID
+
+@Entity
+@Table(
+    name = "users",
+    indexes = [
+        Index(name = "idx_user_email", columnList = "email", unique = true),
+        Index(name = "idx_user_normalized_name", columnList = "normalizedName")
+    ]
+)
+class User(
+    @Id
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    val id: UUID = UUID.randomUUID(),
+
+    @Column(nullable = false, unique = true)
+    var email: String,
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var status: UserStatus,
+
+    @Column(nullable = false)
+    var fullName: String,
+
+    @Column(nullable = false)
+    var normalizedName: String,
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var role: Role,
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_organizations",
+        joinColumns = [JoinColumn(name = "user_id")],
+        inverseJoinColumns = [JoinColumn(name = "organization_id")]
+    )
+    var organizations: MutableSet<Organization> = mutableSetOf(),
+
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+    val createdBy: UUID,
+    var updatedBy: UUID
+)
+
+enum class UserStatus {
+    ACTIVE, PENDING, DEACTIVATED, DELETED
+}
+
+enum class Role {
+    ADMIN, MANAGER, USER
+}
