@@ -1,0 +1,96 @@
+version: '3.8'
+services:
+  postgres-user:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: user_service_db
+      POSTGRES_USER: user_service_user
+      POSTGRES_PASSWORD: userpass
+    ports:
+      - "5433:5432"
+    networks:
+      - backend
+
+  postgres-org:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: organization_service_db
+      POSTGRES_USER: org_service_user
+      POSTGRES_PASSWORD: orgpass
+    ports:
+      - "5434:5432"
+    networks:
+      - backend
+
+  postgres-inv:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: invitation_service_db
+      POSTGRES_USER: invitation_service_user
+      POSTGRES_PASSWORD: invpass
+    ports:
+      - "5435:5432"
+    networks:
+      - backend
+
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - backend
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    networks:
+      - backend
+
+  user-service:
+    build: ./user-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/user_service_db
+      SPRING_DATASOURCE_USERNAME: user_service_user
+      SPRING_DATASOURCE_PASSWORD: userpass
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres-user
+      - eureka-server
+    networks:
+      - backend
+
+  organization-service:
+    build: ./organization-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-org:5432/organization_service_db
+      SPRING_DATASOURCE_USERNAME: org_service_user
+      SPRING_DATASOURCE_PASSWORD: orgpass
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres-org
+      - eureka-server
+    networks:
+      - backend
+
+  invitation-service:
+    build: ./invitation-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-inv:5432/invitation_service_db
+      SPRING_DATASOURCE_USERNAME: invitation_service_user
+      SPRING_DATASOURCE_PASSWORD: invpass
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres-inv
+      - eureka-server
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
