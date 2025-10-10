@@ -30,7 +30,7 @@ class GatewayConfig(private val jwtAuthFilter: JwtAuthenticationFilter) {
                     .method(HttpMethod.DELETE)
                     .and()
                     .header("X-User-Role", "ADMIN")
-                    .filters(jwtAuthFilter.apply(JwtAuthenticationFilter.Config()))
+                    .filters { f -> f.filter(jwtAuthFilter.apply(JwtAuthenticationFilter.Config())) }
                     .uri("lb://user-service")
             }
             .route("user-service-manager") {
@@ -38,13 +38,13 @@ class GatewayConfig(private val jwtAuthFilter: JwtAuthenticationFilter) {
                     .and()
                     .method(HttpMethod.POST)
                     .and()
-                    .header("X-User-Role", listOf("ADMIN", "MANAGER"))
-                    .filters(jwtAuthFilter.apply(JwtAuthenticationFilter.Config()))
+                    .header("X-User-Role", "ADMIN,MANAGER")
+                    .filters { f -> f.filter(jwtAuthFilter.apply(JwtAuthenticationFilter.Config())) }
                     .uri("lb://user-service")
             }
             .route("user-service-basic") {
                 it.path("/api/v1/users/**")
-                    .filters(jwtAuthFilter.apply(JwtAuthenticationFilter.Config()))
+                    .filters { f -> f.filter(jwtAuthFilter.apply(JwtAuthenticationFilter.Config())) }
                     .uri("lb://user-service")
             }
             // Add similar routes for organization and invitation services

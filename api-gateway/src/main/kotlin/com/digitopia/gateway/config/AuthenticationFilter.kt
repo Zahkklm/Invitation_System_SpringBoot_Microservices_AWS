@@ -31,14 +31,23 @@ class AuthenticationFilter(
             if (jwtUtil.validateToken(token)) {
                 val username = jwtUtil.extractUsername(token)
                 val role = jwtUtil.extractRole(token)
+                val email = jwtUtil.extractEmail(token)
 
                 val auth = UsernamePasswordAuthenticationToken(
                     username,
                     null,
-                    listOf(SimpleGrantedAuthority("ROLE_$role"))
+                    if (role != null) listOf(SimpleGrantedAuthority("ROLE_$role")) else emptyList()
                 )
 
-                return chain.filter(exchange)
+                // Add user claims as custom headers for downstream services
+                val mutatedRequest = exchange.request.mutate().apply {
+                    if (username != null) header("X-User-Name", username)
+                    if (role != null) header("X-User-Role", role)
+                    if (email != null) header("X-User-Email", email)
+                }.build()
+                val mutatedExchange = exchange.mutate().request(mutatedRequest).build()
+
+                return chain.filter(mutatedExchange)
                     .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth))
             }
         }
