@@ -799,13 +799,91 @@ spring_boot_microservices/
 
 ## ☁️ AWS Deployment Guide
 
-### Deployment Options
+### 🎯 Easiest: Deploy Using Docker Compose Workflow ⭐ NEW!
 
-This project can be deployed to AWS using several approaches. Here are the recommended options from **easiest to most advanced**:
+**Yes, you can use your existing `docker-compose.yml`!** AWS Copilot works like Docker Compose but deploys to ECS Fargate automatically.
 
-#### **Option 1: AWS Elastic Beanstalk with Docker (Easiest) ⭐ RECOMMENDED**
+#### 🚀 One-Command Deploy with AWS Copilot
 
-**Best for:** Quick deployment, automatic scaling, managed infrastructure
+**For Windows:**
+```powershell
+.\deploy-copilot.ps1
+```
+
+**For Linux/Mac:**
+```bash
+chmod +x deploy-copilot.sh
+./deploy-copilot.sh
+```
+
+Then deploy all services:
+```bash
+copilot svc deploy --all
+```
+
+**That's it!** Copilot will automatically:
+- ✅ Create ECS Cluster with Fargate
+- ✅ Build and push Docker images to ECR
+- ✅ Set up Application Load Balancer
+- ✅ Configure Service Discovery (Cloud Map)
+- ✅ Enable Auto-scaling
+- ✅ Set up CloudWatch Logs
+
+**📚 Complete Guide:** See [DEPLOY_WITH_COMPOSE.md](DEPLOY_WITH_COMPOSE.md)
+
+**Why AWS Copilot?**
+- Works like Docker Compose (familiar workflow)
+- Official AWS tool (fully supported)
+- Uses your existing Dockerfiles
+- Production-ready infrastructure
+- No YAML configuration needed
+
+---
+
+### Alternative: Direct ECS Fargate Deployment
+
+**For more control over infrastructure:**
+
+**For Windows:**
+```powershell
+.\deploy-ecs-fargate.ps1
+```
+
+**For Linux/Mac:**
+```bash
+chmod +x deploy-ecs-fargate.sh
+./deploy-ecs-fargate.sh
+```
+
+This script will:
+- ✅ Create ECR repositories for your Docker images
+- ✅ Build and push all microservices to ECR
+- ✅ Create ECS Cluster with Fargate
+- ✅ Set up CloudWatch logging
+- ✅ Guide you through remaining manual steps (RDS, MSK, ALB)
+
+**📚 Complete Guide:** See [AWS_ECS_FARGATE_DEPLOYMENT.md](AWS_ECS_FARGATE_DEPLOYMENT.md) for detailed step-by-step instructions.
+
+**Cost Estimate:** ~$150-180/month
+- Fargate Tasks: $40-60
+- RDS PostgreSQL: $15
+- Amazon MSK (Kafka): $70
+- Application Load Balancer: $18
+- Data Transfer & Logs: $10-15
+
+**Benefits:**
+- ✅ **Serverless** - No EC2 management
+- ✅ **Auto-scaling** - Scales automatically with load
+- ✅ **Cost-effective** - Pay only for actual usage
+- ✅ **Production-ready** - Battle-tested infrastructure
+
+---
+
+### Alternative Deployment Options
+
+#### **Option 1: AWS Elastic Beanstalk with Docker**
+
+**Best for:** Simple deployment with EC2 management
 
 **Steps:**
 
@@ -842,9 +920,9 @@ eb deploy
 
 ---
 
-#### **Option 2: AWS ECS Fargate (Moderate Complexity)**
+#### **Option 2: AWS EKS (Kubernetes) - Advanced**
 
-**Best for:** Serverless containers, pay-per-use, no EC2 management
+**Best for:** Complex orchestration, advanced features
 
 **Steps:**
 
