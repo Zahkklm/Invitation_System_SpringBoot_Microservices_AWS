@@ -19,7 +19,7 @@ class SecurityConfig {
         .csrf { it.disable() }
         .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
         .authorizeExchange {
-            it.pathMatchers("/api/v1/auth/**", "/healtz").permitAll()
+            it.pathMatchers("/actuator/health").permitAll()
             it.anyExchange().authenticated()
         }
         .build()

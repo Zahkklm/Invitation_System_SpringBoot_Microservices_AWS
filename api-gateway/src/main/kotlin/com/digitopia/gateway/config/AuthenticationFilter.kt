@@ -19,7 +19,8 @@ class AuthenticationFilter(
         val request = exchange.request
         val path = request.path.value()
 
-        if (path.startsWith("/api/v1/auth") || path == "/healtz") {
+        // Allow public endpoints (actuator health check)
+        if (path.startsWith("/actuator/health")) {
             return chain.filter(exchange)
         }
 

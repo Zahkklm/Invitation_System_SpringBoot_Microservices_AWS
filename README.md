@@ -12,15 +12,23 @@ The project consists of the following microservices:
 
 - **API Gateway** (Port: 8080)
   - Route management
-  - JWT authentication
+  - JWT authentication via AWS Cognito
   - Role-based access control
   - Request filtering
 
-- **Auth Service** (Port: 8083)
-  - AWS Cognito integration
-  - User authentication
-  - JWT token management
-  - Role-based authorization
+- **User Service** (Port: 8084)
+  - User management and profile
+  - Cognito integration
+  - Source of truth for user data
+
+- **Organization Service** (Port: 8082)
+  - Organization CRUD operations
+  - Organization search and filtering
+
+- **Invitation Service** (Port: 8085)
+  - Invitation management
+  - Automatic expiration (7 days)
+  - Business rule enforcement
 
 ## Technology Stack
 
@@ -56,42 +64,46 @@ The project consists of the following microservices:
 
 Start the services in the following order:
 
-1. Eureka Server:
+1. **Eureka Server**:
 ```bash
 ./gradlew :eureka-server:bootRun
 ```
 
-2. Auth Service:
-```bash
-./gradlew :auth-service:bootRun
-```
-
-3. API Gateway:
+2. **API Gateway**:
 ```bash
 ./gradlew :api-gateway:bootRun
 ```
 
+3. **Microservices** (can run in parallel):
+```bash
+./gradlew :user-service:bootRun
+./gradlew :organization-service:bootRun
+./gradlew :invitation-service:bootRun
+```
+
+Or use Docker Compose:
+```bash
+docker-compose up --build
+```
+
 ## Authentication Flow
 
-1. **User Registration:**
-```http
-POST /api/v1/auth/signup
-{
-    "email": "user@example.com",
-    "password": "password123",
-    "fullName": "John Doe",
-    "role": "USER"
-}
-```
+Authentication is handled by **AWS Cognito** directly:
 
-2. **User Login:**
-```http
-POST /api/v1/auth/signin
-{
-    "email": "user@example.com",
-    "password": "password123"
-}
-```
+1. **User Registration** (via Cognito):
+   - User signs up through Cognito-hosted UI or custom UI
+   - Post-confirmation Lambda creates user in User Service
+   - User receives Cognito sub ID
+
+2. **User Login** (via Cognito):
+   - User authenticates with Cognito
+   - Receives JWT access token
+   - Token includes user claims (sub, email, role)
+
+3. **API Requests**:
+   - Include JWT in Authorization header: `Bearer <token>`
+   - API Gateway validates token against Cognito JWK
+   - Gateway adds user claims to headers for downstream services
 
 ## Role-Based Access Control
 
@@ -193,10 +205,12 @@ This approach gives you flexibility, control, and avoids vendor lock-in for your
 
 ## Health Checks
 
-Each service provides a health check endpoint at `/healtz`:
-- Eureka Server: http://localhost:8761/healtz
-- API Gateway: http://localhost:8080/healtz
-- Auth Service: http://localhost:8083/healtz
+Each service provides a health check endpoint via Spring Boot Actuator:
+- **Eureka Server**: http://localhost:8761/actuator/health
+- **API Gateway**: http://localhost:8080/actuator/health
+- **User Service**: http://localhost:8084/actuator/health
+- **Organization Service**: http://localhost:8082/actuator/health
+- **Invitation Service**: http://localhost:8085/actuator/health
 
 ## Contributing
 

@@ -13,16 +13,6 @@ class GatewayConfig(private val jwtAuthFilter: JwtAuthenticationFilter) {
     @Bean
     fun routeLocator(builder: RouteLocatorBuilder): RouteLocator {
         return builder.routes()
-            // Public routes
-            .route("auth-service") {
-                it.path("/api/v1/auth/**")
-                    .uri("lb://auth-service")
-            }
-            .route("health-check") {
-                it.path("/healtz")
-                    .uri("lb://api-gateway")
-            }
-            
             // Protected routes with role-based access
             .route("user-service") {
                 it.path("/api/v1/users/**")
