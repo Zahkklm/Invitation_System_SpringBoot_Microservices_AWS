@@ -3,6 +3,7 @@ package com.digitopia.invitation.service
 import com.digitopia.common.events.*
 import com.digitopia.common.exception.DuplicateResourceException
 import com.digitopia.common.exception.ResourceNotFoundException
+import com.digitopia.common.util.TextSanitizer
 import com.digitopia.invitation.dto.CreateInvitationRequest
 import com.digitopia.invitation.dto.InvitationResponse
 import com.digitopia.invitation.dto.UpdateInvitationStatusRequest
@@ -33,10 +34,14 @@ class InvitationService(
         if (lastInvitations.firstOrNull()?.status == InvitationStatus.REJECTED) {
             throw DuplicateResourceException("Cannot reinvite: last invitation was rejected")
         }
+        
+        // Sanitize the invitation message to prevent XSS and remove unwanted content
+        val sanitizedMessage = TextSanitizer.sanitize(request.message)
+        
         val invitation = Invitation(
             userId = request.userId,
             organizationId = request.organizationId,
-            message = request.message,
+            message = sanitizedMessage,
             status = InvitationStatus.PENDING,
             createdBy = creatorId,
             updatedBy = creatorId
