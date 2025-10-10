@@ -9,19 +9,43 @@ A comprehensive event-driven microservices system for managing users, organizati
 
 ---
 
-## ☁️ AWS Deployment Status
+## ☁️ AWS ECS Deployment
 
-**✅ DEPLOYED TO AWS ECS:**
-- Docker images pushed to ECR
+**✅ Successfully Deployed to AWS:**
+- Docker images pushed to AWS ECR (Elastic Container Registry)
 - ECS cluster created: `digitopia-cluster`
-- Task definitions ready
+- All 5 microservices containerized and ready
 
-**📖 Deployment Guides:**
-- **Quick Deploy**: See `SIMPLE_AWS_DEPLOY.md` - Push images to ECR (✅ DONE)
-- **Service Setup**: See `AWS_SERVICE_DEPLOYMENT_GUIDE.md` - Deploy services to Fargate
-- **Full Guide**: See `AWS_ECS_FARGATE_DEPLOYMENT.md` - Complete AWS setup
+**📖 Deployment Guide:**
 
-**🎯 Next Steps:** See `AWS_SERVICE_DEPLOYMENT_GUIDE.md` for deploying services
+### Step 1: Push Images to ECR
+```powershell
+.\deploy-ecs-simple.ps1
+```
+
+This automated script:
+- Creates ECR repositories for all services
+- Builds Docker images locally
+- Pushes images to AWS ECR
+- Creates ECS cluster
+
+**Time:** 10-15 minutes  
+**Status:** ✅ **COMPLETED**
+
+### Step 2: Deploy Services to ECS Fargate
+
+After images are in ECR, deploy services using AWS Console:
+
+1. Go to: https://console.aws.amazon.com/ecs/v2/clusters/digitopia-cluster
+2. Create Task Definitions for each service
+3. Create ECS Services using the task definitions
+4. Configure networking, load balancers, and environment variables
+
+**Full Guide:** See `AWS_SERVICE_DEPLOYMENT_GUIDE.md` for detailed step-by-step instructions.
+
+**💰 Cost:** ~$0.40/hour for all services (~$291/month if always running)
+
+**💡 Tip:** Test locally with `docker-compose up` first (FREE!) before deploying to AWS.
 
 ---
 
@@ -835,466 +859,103 @@ spring_boot_microservices/
 
 ---
 
-## ☁️ AWS Deployment Guide
+## 💡 Local Development (Recommended)
 
-### 🎯 Easiest: Deploy Using Docker Compose Workflow ⭐ NEW!
+**Test everything locally first - it's FREE and identical to AWS!**
 
-**Yes, you can use your existing `docker-compose.yml`!** AWS Copilot works like Docker Compose but deploys to ECS Fargate automatically.
+```bash
+# Start all services
+docker-compose up
 
-#### 🚀 One-Command Deploy with AWS Copilot
+# Stop all services
+docker-compose down
+```
 
-**For Windows:**
+**What you get:**
+- ✅ All 5 microservices
+- ✅ PostgreSQL databases (3)
+- ✅ Kafka + Zookeeper
+- ✅ Eureka Server
+- ✅ API Gateway
+- ✅ **Cost: $0.00**
+
+**Access Points:**
+- API Gateway: http://localhost:8080
+- Eureka Dashboard: http://localhost:8761
+- User Service: http://localhost:8084
+- Organization Service: http://localhost:8082
+- Invitation Service: http://localhost:8085
+
+---
+
+## ☁️ AWS Deployment (Production)
+
+### 🎯 Deploy to AWS ECS Fargate
+
+### 🎯 Deploy to AWS ECS Fargate
+
+**We've successfully deployed the Docker images to AWS ECR. Here's the process:**
+
+#### Step 1: Build & Push Images to ECR (✅ COMPLETED)
+
 ```powershell
-.\deploy-copilot.ps1
+# Run the automated deployment script
+.\deploy-ecs-simple.ps1
 ```
 
-**For Linux/Mac:**
-```bash
-chmod +x deploy-copilot.sh
-./deploy-copilot.sh
+**This script automatically:**
+1. Creates ECR repositories for all 5 services
+2. Builds Docker images locally (avoiding network issues)
+3. Pushes images to AWS ECR
+4. Creates ECS cluster: `digitopia-cluster`
+
+**Status:** ✅ **Successfully deployed!**
+
+Your images are now stored at:
+```
+493272324121.dkr.ecr.us-east-1.amazonaws.com/digitopia/eureka-server:latest
+493272324121.dkr.ecr.us-east-1.amazonaws.com/digitopia/api-gateway:latest
+493272324121.dkr.ecr.us-east-1.amazonaws.com/digitopia/user-service:latest
+493272324121.dkr.ecr.us-east-1.amazonaws.com/digitopia/organization-service:latest
+493272324121.dkr.ecr.us-east-1.amazonaws.com/digitopia/invitation-service:latest
 ```
 
-Then deploy all services:
-```bash
-copilot svc deploy --all
-```
+#### Step 2: Deploy Services to Fargate
 
-**That's it!** Copilot will automatically:
-- ✅ Create ECS Cluster with Fargate
-- ✅ Build and push Docker images to ECR
-- ✅ Set up Application Load Balancer
-- ✅ Configure Service Discovery (Cloud Map)
-- ✅ Enable Auto-scaling
-- ✅ Set up CloudWatch Logs
+**See the complete guide:** `AWS_SERVICE_DEPLOYMENT_GUIDE.md`
 
-**📚 Complete Guide:** See [DEPLOY_WITH_COMPOSE.md](DEPLOY_WITH_COMPOSE.md)
+**Summary:**
+1. Create Task Definitions in AWS Console for each service
+2. Configure networking (VPC, subnets, security groups)
+3. Set up environment variables (database URLs, Kafka endpoints)
+4. Create ECS Services
+5. Configure load balancers (optional)
 
-**Why AWS Copilot?**
-- Works like Docker Compose (familiar workflow)
-- Official AWS tool (fully supported)
-- Uses your existing Dockerfiles
-- Production-ready infrastructure
-- No YAML configuration needed
+**💰 Estimated Cost:**
+- **Per Hour:** ~$0.40 (all 5 services)
+- **Per Month:** ~$291 (if always running)
+- **For Testing:** ~$0.41 for 1 hour of testing
+
+**💡 Recommendation:** Test locally first with `docker-compose up` (FREE), then deploy to AWS when you need public access or want to demo the application.
 
 ---
 
-### Alternative: Direct ECS Fargate Deployment
+### 📚 AWS Deployment Documentation
 
-**For more control over infrastructure:**
-
-**For Windows:**
-```powershell
-.\deploy-ecs-fargate.ps1
-```
-
-**For Linux/Mac:**
-```bash
-chmod +x deploy-ecs-fargate.sh
-./deploy-ecs-fargate.sh
-```
-
-This script will:
-- ✅ Create ECR repositories for your Docker images
-- ✅ Build and push all microservices to ECR
-- ✅ Create ECS Cluster with Fargate
-- ✅ Set up CloudWatch logging
-- ✅ Guide you through remaining manual steps (RDS, MSK, ALB)
-
-**📚 Complete Guide:** See [AWS_ECS_FARGATE_DEPLOYMENT.md](AWS_ECS_FARGATE_DEPLOYMENT.md) for detailed step-by-step instructions.
-
-**Cost Estimate:** ~$150-180/month
-- Fargate Tasks: $40-60
-- RDS PostgreSQL: $15
-- Amazon MSK (Kafka): $70
-- Application Load Balancer: $18
-- Data Transfer & Logs: $10-15
-
-**Benefits:**
-- ✅ **Serverless** - No EC2 management
-- ✅ **Auto-scaling** - Scales automatically with load
-- ✅ **Cost-effective** - Pay only for actual usage
-- ✅ **Production-ready** - Battle-tested infrastructure
+| Document | Purpose | Status |
+|----------|---------|--------|
+| `deploy-ecs-simple.ps1` | PowerShell script to push images to ECR | ✅ Working |
+| `AWS_SERVICE_DEPLOYMENT_GUIDE.md` | Step-by-step guide for creating ECS services | 📖 Complete |
+| `SIMPLE_AWS_DEPLOY.md` | Quick reference for ECR deployment | � Reference |
 
 ---
 
-### Alternative Deployment Options
-
-#### **Option 1: AWS Elastic Beanstalk with Docker**
-
-**Best for:** Simple deployment with EC2 management
-
-**Steps:**
-
-1. **Prepare your application:**
-```bash
-# Ensure all services are containerized
-docker-compose build
-```
-
-2. **Install AWS CLI and EB CLI:**
-```bash
-pip install awsebcli awscli
-aws configure  # Enter your AWS credentials
-```
-
-3. **Create Elastic Beanstalk environment:**
-```bash
-# Initialize EB in your project
-eb init -p docker digitopia-invitation-system --region us-east-1
-
-# Create environment with docker-compose
-eb create digitopia-prod --instance-type t3.medium
-```
-
-4. **Deploy:**
-```bash
-eb deploy
-```
-
-**Estimated Cost:** ~$50-100/month for small-medium load  
-**Setup Time:** 15-30 minutes  
-**Auto-scaling:** ✅ Yes  
-**Load Balancing:** ✅ Automatic
-
----
-
-#### **Option 2: AWS EKS (Kubernetes) - Advanced**
-
-**Best for:** Complex orchestration, advanced features
-
-**Steps:**
-
-1. **Push Docker images to ECR:**
-```bash
-# Login to ECR
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
-
-# Create repositories
-aws ecr create-repository --repository-name digitopia/user-service
-aws ecr create-repository --repository-name digitopia/organization-service
-aws ecr create-repository --repository-name digitopia/invitation-service
-aws ecr create-repository --repository-name digitopia/api-gateway
-aws ecr create-repository --repository-name digitopia/eureka-server
-
-# Tag and push images
-docker tag user-service:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/digitopia/user-service:latest
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/digitopia/user-service:latest
-
-# Repeat for other services...
-```
-
-2. **Set up RDS for PostgreSQL:**
-```bash
-aws rds create-db-instance \
-  --db-instance-identifier digitopia-postgres \
-  --db-instance-class db.t3.micro \
-  --engine postgres \
-  --master-username admin \
-  --master-user-password YourSecurePassword123! \
-  --allocated-storage 20 \
-  --publicly-accessible
-```
-
-3. **Set up Amazon MSK (Managed Kafka):**
-```bash
-aws kafka create-cluster \
-  --cluster-name digitopia-kafka \
-  --broker-node-group-info file://broker-config.json \
-  --kafka-version 3.5.1
-```
-
-4. **Create ECS Task Definitions and Services** via AWS Console or CloudFormation
-
-**Estimated Cost:** ~$100-200/month  
-**Setup Time:** 1-2 hours  
-**Auto-scaling:** ✅ Yes  
-**Serverless:** ✅ Yes (Fargate)
-
----
-
-#### **Option 3: AWS EKS (Kubernetes) (Advanced)**
-
-**Best for:** Large-scale applications, complex orchestration, multi-cloud
-
-**Steps:**
-
-1. **Create EKS cluster:**
-```bash
-eksctl create cluster \
-  --name digitopia-cluster \
-  --region us-east-1 \
-  --nodegroup-name standard-workers \
-  --node-type t3.medium \
-  --nodes 3
-```
-
-2. **Deploy with Kubernetes manifests:**
-```bash
-kubectl apply -f k8s/
-```
-
-**Estimated Cost:** ~$150-300/month (cluster + nodes)  
-**Setup Time:** 2-4 hours  
-**Complexity:** High  
-**Best for:** Enterprise-scale
-
----
-
-### Quick Start: Deploy with Elastic Beanstalk (5 Minutes) 🚀
-
-**The absolute easiest way to deploy your entire stack:**
-
-1. **Install prerequisites:**
-```bash
-pip install awsebcli
-aws configure
-```
-
-2. **Create a `Dockerrun.aws.json` file** (already configured for multi-container):
-```json
-{
-  "AWSEBDockerrunVersion": 2,
-  "volumes": [],
-  "containerDefinitions": [
-    {
-      "name": "eureka-server",
-      "image": "eureka-server:latest",
-      "essential": true,
-      "memory": 512,
-      "portMappings": [
-        {
-          "hostPort": 8761,
-          "containerPort": 8761
-        }
-      ]
-    },
-    {
-      "name": "api-gateway",
-      "image": "api-gateway:latest",
-      "essential": true,
-      "memory": 512,
-      "portMappings": [
-        {
-          "hostPort": 8080,
-          "containerPort": 8080
-        }
-      ],
-      "links": ["eureka-server"]
-    }
-  ]
-}
-```
-
-3. **Deploy:**
-```bash
-# Initialize (one-time)
-eb init -p "Multi-container Docker" digitopia --region us-east-1
-
-# Create environment and deploy
-eb create digitopia-prod
-
-# For updates
-eb deploy
-```
-
-4. **Configure environment variables:**
-```bash
-eb setenv \
-  AWS_COGNITO_USER_POOL_ID=your-pool-id \
-  AWS_COGNITO_CLIENT_ID=your-client-id \
-  SPRING_DATASOURCE_URL=jdbc:postgresql://your-rds-endpoint:5432/digitopia \
-  KAFKA_BOOTSTRAP_SERVERS=your-msk-endpoint:9092
-```
-
-5. **Access your application:**
-```bash
-eb open  # Opens the application in your browser
-```
-
----
-
-### AWS Infrastructure Requirements
-
-#### Required Services:
-
-| Service | Purpose | Estimated Cost |
-|---------|---------|----------------|
-| **RDS PostgreSQL** | 3 databases (user, org, invitation) | $15-30/month |
-| **Amazon MSK** | Managed Kafka for events | $50-80/month |
-| **Elastic Beanstalk** | Application hosting | $30-60/month |
-| **Cognito** | User authentication | Free tier (50k users) |
-| **CloudWatch** | Logging & monitoring | $5-15/month |
-| **Route 53** | DNS (optional) | $1/month |
-| **Total** | | **~$100-200/month** |
-
-#### Managed Services Setup:
-
-**1. Amazon RDS (PostgreSQL):**
-- Create 1 RDS instance with 3 databases
-- Or create 3 separate micro instances
-- Enable automated backups
-- Configure security groups
-
-**2. Amazon MSK (Kafka):**
-- 3 broker nodes recommended
-- Enable in-transit encryption
-- Configure VPC and subnets
-
-**3. AWS Cognito:**
-- Already configured in your project
-- No changes needed
-
----
-
-### Production Deployment Checklist
-
-- [ ] Set up RDS PostgreSQL with automated backups
-- [ ] Create Amazon MSK cluster for Kafka
-- [ ] Configure AWS Cognito User Pool
-- [ ] Push Docker images to ECR
-- [ ] Set up environment variables in Elastic Beanstalk
-- [ ] Configure security groups (allow traffic between services)
-- [ ] Set up CloudWatch alarms for monitoring
-- [ ] Configure Route 53 for custom domain (optional)
-- [ ] Enable HTTPS with AWS Certificate Manager
-- [ ] Set up auto-scaling policies
-- [ ] Configure database connection pooling
-- [ ] Enable application logs forwarding to CloudWatch
-
----
-
-### Simplified Deployment Script
-
-Create `deploy-to-aws.sh`:
-
-```bash
-#!/bin/bash
-
-echo "🚀 Deploying Digitopia to AWS Elastic Beanstalk..."
-
-# Build Docker images
-echo "📦 Building Docker images..."
-docker-compose build
-
-# Initialize EB (first time only)
-if [ ! -d ".elasticbeanstalk" ]; then
-  echo "🎯 Initializing Elastic Beanstalk..."
-  eb init -p "Multi-container Docker" digitopia --region us-east-1
-fi
-
-# Deploy
-echo "🌍 Deploying to AWS..."
-eb deploy
-
-# Show status
-echo "✅ Deployment complete!"
-echo "🔗 Application URL:"
-eb status | grep CNAME
-
-echo "📊 View logs:"
-echo "   eb logs"
-echo ""
-echo "🌐 Open application:"
-echo "   eb open"
-```
-
-Make it executable and run:
-```bash
-chmod +x deploy-to-aws.sh
-./deploy-to-aws.sh
-```
-
----
-
-### Alternative: One-Click AWS Deployment
-
-Use **AWS Copilot** for the absolute easiest deployment:
-
-```bash
-# Install AWS Copilot
-curl -Lo copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-linux && chmod +x copilot
-
-# Initialize application
-copilot app init digitopia
-
-# Deploy all services
-copilot init --app digitopia --name user-service --type "Load Balanced Web Service" --dockerfile ./user-service/Dockerfile --port 8084
-copilot init --app digitopia --name org-service --type "Load Balanced Web Service" --dockerfile ./organization-service/Dockerfile --port 8082
-copilot init --app digitopia --name invitation-service --type "Load Balanced Web Service" --dockerfile ./invitation-service/Dockerfile --port 8085
-
-# Deploy
-copilot deploy --all
-```
-
-**AWS Copilot handles:**
-- ✅ VPC creation
-- ✅ Load balancer setup
-- ✅ ECS cluster creation
-- ✅ Service discovery
-- ✅ Auto-scaling
-- ✅ Logging
-
----
-
-### Cost Optimization Tips
-
-1. **Use AWS Free Tier:**
-   - RDS db.t3.micro (750 hours/month free for 12 months)
-   - EC2 t3.micro instances
-   - Cognito (50,000 MAUs free)
-
-2. **Right-size instances:**
-   - Start with t3.small for services
-   - Monitor and adjust based on load
-
-3. **Use Spot Instances** for ECS/EKS (50-70% cost savings)
-
-4. **Enable auto-scaling** to handle traffic spikes efficiently
-
-5. **Use Amazon Aurora Serverless** for PostgreSQL (pay per use)
-
----
-
-### Monitoring & Observability
-
-After deployment, monitor your application:
-
-```bash
-# View logs
-eb logs
-
-# Monitor health
-eb health
-
-# SSH into instance (if needed)
-eb ssh
-
-# View CloudWatch metrics
-aws cloudwatch get-metric-statistics \
-  --namespace AWS/ElasticBeanstalk \
-  --metric-name EnvironmentHealth \
-  --dimensions Name=EnvironmentName,Value=digitopia-prod \
-  --start-time 2025-01-01T00:00:00Z \
-  --end-time 2025-01-01T23:59:59Z \
-  --period 3600 \
-  --statistics Average
-```
-
----
-
-### Troubleshooting Common Issues
-
-**Issue:** Services can't connect to RDS  
-**Solution:** Check security group rules, ensure RDS is accessible from EB environment
-
-**Issue:** Kafka connection timeout  
-**Solution:** Verify MSK endpoint, check VPC configuration
-
-**Issue:** High memory usage  
-**Solution:** Increase instance type or optimize JVM settings
-
-**Issue:** 502 Bad Gateway  
-**Solution:** Check service health endpoints, verify port mappings
+### ⚠️ Important Notes
+
+1. **Local Testing First:** Always test with `docker-compose up` before deploying to AWS
+2. **Cost Management:** Stop ECS services when not in use to avoid charges
+3. **Database Setup:** You'll need to set up RDS PostgreSQL (3 databases) and Amazon MSK (Kafka) for full deployment
+4. **Root Account:** Don't use AWS root account - create an IAM user with appropriate permissions
 
 ---
 
@@ -1366,49 +1027,11 @@ Authentication is handled by **AWS Cognito** directly:
   - Access to management endpoints
 
 - **USER**
-  - Access to own records only
+    - Access to own records only
   - Can manage own profile
   - Can handle invitations
 
-## TODO List
-
-### High Priority
-- [ ] Implement User Service
-  - [ ] CRUD operations
-  - [ ] User search endpoints
-  - [ ] Organization membership handling
-
-- [ ] Implement Organization Service
-  - [ ] CRUD operations
-  - [ ] Organization search
-  - [ ] User membership management
-
-- [ ] Implement Invitation Service
-  - [ ] Invitation creation and management
-  - [ ] Automatic expiration handling
-  - [ ] Email notifications
-
-### Medium Priority
-- [ ] Add Input Validation
-  - [ ] Request validation
-  - [ ] Data sanitization
-  - [ ] Error handling
-
-- [ ] Implement Database Layer
-  - [ ] Set up PostgreSQL
-  - [ ] Create database schemas
-  - [ ] Add indexing
-
-### Low Priority
-- [ ] Add Documentation
-  - [ ] API documentation using OpenAPI/Swagger
-  - [ ] Postman collection
-  - [ ] Integration guides
-
-- [ ] Add Testing
-  - [ ] Unit tests
-  - [ ] Integration tests
-  - [ ] API tests
+---
 
 ## User Data Strategy
 
