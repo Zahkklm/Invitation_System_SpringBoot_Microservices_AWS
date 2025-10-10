@@ -2,6 +2,7 @@ package com.digitopia.gateway.filter
 
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor
+import com.nimbusds.jose.proc.SecurityContext
 import org.springframework.cloud.gateway.filter.GatewayFilter
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory
 import org.springframework.http.HttpStatus
