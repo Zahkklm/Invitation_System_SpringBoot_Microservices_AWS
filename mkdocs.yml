@@ -1,0 +1,103 @@
+site_name: Digitopia Invitation System
+site_description: Event-Driven Microservices with Spring Boot, Kotlin, Kafka, and AWS
+site_author: Zahkklm
+site_url: https://zahkklm.github.io/Invitation_System_SpringBoot_Microservices_AWS/
+
+repo_name: Zahkklm/Invitation_System_SpringBoot_Microservices_AWS
+repo_url: https://github.com/Zahkklm/Invitation_System_SpringBoot_Microservices_AWS
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.mark
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search
+  - tags
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Zahkklm
+  version:
+    provider: mike
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quick Start: getting-started/quick-start.md
+      - Simple Start: getting-started/simple-start.md
+      - Testing Guide: getting-started/testing.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Event-Driven: architecture/event-driven.md
+      - Data Models: architecture/data-models.md
+      - Health Endpoints: architecture/health-endpoints.md
+  - AWS Deployment:
+      - Overview: aws/deployment-comparison.md
+      - Reality Check: aws/deployment-reality.md
+      - AWS Setup Guide: aws/setup-guide.md
+      - ECS Fargate: aws/ecs-fargate.md
+      - Copilot Issues: aws/copilot-issues.md
+      - Cost Calculator: aws/cost-calculator.md
+      - Cost Quick Reference: aws/cost-reference.md
+  - Implementation:
+      - Final Summary: implementation/final-summary.md
+      - Testing Status: implementation/testing.md
+
+copyright: Copyright &copy; 2025 Digitopia Project

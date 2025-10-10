@@ -9,34 +9,6 @@ A comprehensive event-driven microservices system for managing users, organizati
 
 ---
 
-## 📚 Documentation Website
-
-**View the complete documentation as a professional website:**
-
-```bash
-# Start the documentation server
-mkdocs serve
-```
-
-Then open: **http://127.0.0.1:8000**
-
-The documentation includes:
-- 🚀 Quick Start Guide
-- 🏗️ Architecture Overview
-- ☁️ AWS Deployment Options
-- 💰 Cost Calculator
-- 🧪 Testing Guide
-- And much more!
-
-**Deploy to GitHub Pages (FREE hosting):**
-```bash
-mkdocs gh-deploy
-```
-
-Your docs will be live at: `https://zahkklm.github.io/Invitation_System_SpringBoot_Microservices_AWS/`
-
----
-
 ## 📋 Table of Contents
 
 - [Architecture Overview](#-architecture-overview)
