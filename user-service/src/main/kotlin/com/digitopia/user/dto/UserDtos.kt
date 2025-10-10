@@ -14,7 +14,10 @@ data class CreateUserRequest(
     val fullName: String,
 
     @field:NotNull(message = "Role is required")
-    val role: Role
+    val role: Role,
+
+    // Optional: Cognito sub for linking external identity
+    val cognitoSub: String? = null
 )
 
 data class UpdateUserRequest(
@@ -26,6 +29,7 @@ data class UpdateUserRequest(
 
 data class UserResponse(
     val id: String,
+    val cognitoSub: String?,
     val email: String,
     val fullName: String,
     val normalizedName: String,
