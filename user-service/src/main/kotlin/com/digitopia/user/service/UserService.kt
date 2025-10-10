@@ -1,8 +1,11 @@
 package com.digitopia.user.service
 
+import com.digitopia.common.events.UserCreatedEvent
+import com.digitopia.common.events.UserUpdatedEvent
 import com.digitopia.user.dto.CreateUserRequest
 import com.digitopia.user.dto.UpdateUserRequest
 import com.digitopia.user.dto.UserResponse
+import com.digitopia.user.event.UserEventPublisher
 import com.digitopia.user.model.Role
 import com.digitopia.user.model.User
 import com.digitopia.user.model.UserStatus
@@ -16,7 +19,10 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Service
-class UserService(private val userRepository: UserRepository) {
+class UserService(
+    private val userRepository: UserRepository,
+    private val eventPublisher: UserEventPublisher
+) {
 
     @Transactional
     fun createUser(request: CreateUserRequest, creatorId: UUID): UserResponse {
@@ -48,7 +54,20 @@ class UserService(private val userRepository: UserRepository) {
             updatedBy = creatorId
         )
 
-        return userRepository.save(user).toResponse()
+        val savedUser = userRepository.save(user)
+        
+        // Publish event for audit trail and other services
+        eventPublisher.publishUserCreated(
+            UserCreatedEvent(
+                userId = savedUser.id,
+                email = savedUser.email,
+                fullName = savedUser.fullName,
+                role = savedUser.role.name,
+                createdBy = creatorId
+            )
+        )
+
+        return savedUser.toResponse()
     }
 
     @Transactional
@@ -56,19 +75,43 @@ class UserService(private val userRepository: UserRepository) {
         val user = userRepository.findById(id)
             .orElseThrow { EntityNotFoundException("User not found") }
 
+        val updatedFields = mutableMapOf<String, Any>()
+
         request.fullName?.let {
             user.fullName = it
             user.normalizedName = normalizeFullName(it)
+            updatedFields["fullName"] = it
+            updatedFields["normalizedName"] = user.normalizedName
         }
 
         request.status?.let {
             user.status = it
+            updatedFields["status"] = it.name
         }
 
         user.updatedAt = LocalDateTime.now()
         user.updatedBy = updaterId
 
-        return userRepository.save(user).toResponse()
+        val savedUser = userRepository.save(user)
+        
+        // Publish event if there were changes
+        if (updatedFields.isNotEmpty()) {
+            eventPublisher.publishUserUpdated(
+                UserUpdatedEvent(
+                    userId = id,
+                    updatedFields = updatedFields,
+                    updatedBy = updaterId
+                )
+            )
+        }
+
+        return savedUser.toResponse()
+    }
+
+    fun getUserOrganizations(userId: UUID): Set<UUID> {
+        val user = userRepository.findById(userId)
+            .orElseThrow { EntityNotFoundException("User not found") }
+        return user.organizationIds
     }
 
     fun searchByNormalizedName(name: String, pageable: Pageable): Page<UserResponse> {

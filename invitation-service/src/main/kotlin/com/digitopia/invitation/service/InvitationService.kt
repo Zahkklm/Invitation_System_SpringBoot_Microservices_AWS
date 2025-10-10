@@ -1,10 +1,12 @@
 package com.digitopia.invitation.service
 
+import com.digitopia.common.events.*
 import com.digitopia.common.exception.DuplicateResourceException
 import com.digitopia.common.exception.ResourceNotFoundException
 import com.digitopia.invitation.dto.CreateInvitationRequest
 import com.digitopia.invitation.dto.InvitationResponse
 import com.digitopia.invitation.dto.UpdateInvitationStatusRequest
+import com.digitopia.invitation.event.InvitationEventPublisher
 import com.digitopia.invitation.model.Invitation
 import com.digitopia.invitation.model.InvitationStatus
 import com.digitopia.invitation.repository.InvitationRepository
@@ -15,7 +17,10 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Service
-class InvitationService(private val invitationRepository: InvitationRepository) {
+class InvitationService(
+    private val invitationRepository: InvitationRepository,
+    private val eventPublisher: InvitationEventPublisher
+) {
 
     @Transactional
     fun createInvitation(request: CreateInvitationRequest, creatorId: UUID): InvitationResponse {
@@ -36,16 +41,59 @@ class InvitationService(private val invitationRepository: InvitationRepository) 
             createdBy = creatorId,
             updatedBy = creatorId
         )
-        return invitationRepository.save(invitation).toResponse()
+        val savedInvitation = invitationRepository.save(invitation)
+        
+        // Publish event for audit trail and email notifications
+        eventPublisher.publishInvitationCreated(
+            InvitationCreatedEvent(
+                invitationId = savedInvitation.id!!,
+                userId = savedInvitation.userId,
+                organizationId = savedInvitation.organizationId,
+                message = savedInvitation.message,
+                createdBy = creatorId
+            )
+        )
+        
+        return savedInvitation.toResponse()
     }
 
     @Transactional
     fun updateInvitationStatus(id: UUID, request: UpdateInvitationStatusRequest, updaterId: UUID): InvitationResponse {
         val invitation = invitationRepository.findById(id).orElseThrow { ResourceNotFoundException("Invitation not found") }
+        val oldStatus = invitation.status
+        
         invitation.status = request.status
         invitation.updatedBy = updaterId
         invitation.updatedAt = LocalDateTime.now()
-        return invitationRepository.save(invitation).toResponse()
+        
+        val savedInvitation = invitationRepository.save(invitation)
+        
+        // Publish events based on status change
+        when (request.status) {
+            InvitationStatus.ACCEPTED -> {
+                eventPublisher.publishInvitationAccepted(
+                    InvitationAcceptedEvent(
+                        invitationId = id,
+                        userId = invitation.userId,
+                        organizationId = invitation.organizationId,
+                        acceptedBy = updaterId
+                    )
+                )
+            }
+            InvitationStatus.REJECTED -> {
+                eventPublisher.publishInvitationRejected(
+                    InvitationRejectedEvent(
+                        invitationId = id,
+                        userId = invitation.userId,
+                        organizationId = invitation.organizationId,
+                        rejectedBy = updaterId
+                    )
+                )
+            }
+            else -> { /* No event for other status changes */ }
+        }
+        
+        return savedInvitation.toResponse()
     }
 
     fun getInvitationsByUser(userId: UUID): List<InvitationResponse> =
@@ -65,6 +113,15 @@ class InvitationService(private val invitationRepository: InvitationRepository) 
         expired.forEach {
             it.status = InvitationStatus.EXPIRED
             it.updatedAt = LocalDateTime.now()
+            
+            // Publish expiration event
+            eventPublisher.publishInvitationExpired(
+                InvitationExpiredEvent(
+                    invitationId = it.id!!,
+                    userId = it.userId,
+                    organizationId = it.organizationId
+                )
+            )
         }
         invitationRepository.saveAll(expired)
     }

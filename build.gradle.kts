@@ -6,6 +6,9 @@ plugins {
     kotlin("plugin.jpa") version "1.9.10" apply false
 }
 
+// Define Spring Cloud version for event-driven architecture
+extra["springCloudVersion"] = "2022.0.4"
+
 allprojects {
     group = "com.digitopia"
     version = "1.0-SNAPSHOT"

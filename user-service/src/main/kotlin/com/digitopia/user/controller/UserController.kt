@@ -84,4 +84,20 @@ class UserController(private val userService: UserService) {
     ): ResponseEntity<UserResponse> {
         return ResponseEntity.ok(userService.findByEmail(email))
     }
+
+    @Operation(
+        summary = "Get user's organizations",
+        description = "Returns all organization IDs that a user belongs to"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Organizations retrieved successfully"),
+        ApiResponse(responseCode = "404", description = "User not found")
+    ])
+    @GetMapping("/{id}/organizations")
+    fun getUserOrganizations(
+        @Parameter(description = "User ID")
+        @PathVariable id: UUID
+    ): ResponseEntity<Set<UUID>> {
+        return ResponseEntity.ok(userService.getUserOrganizations(id))
+    }
 }
