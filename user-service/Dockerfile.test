@@ -1,0 +1,24 @@
+FROM eclipse-temurin:17-jdk-alpine AS build
+
+WORKDIR /app
+
+# Install bash and gradle dependencies
+RUN apk add --no-cache bash
+
+# Copy gradle files
+COPY gradlew ./
+COPY gradle ./gradle
+COPY gradle/wrapper ./gradle/wrapper
+
+# Copy build files
+COPY build.gradle.kts ./
+COPY settings.gradle.kts ./
+
+# Download dependencies (cached layer)
+RUN chmod +x gradlew && ./gradlew dependencies --no-daemon || true
+
+# Copy source code
+COPY . ./
+
+# Run tests
+CMD ["./gradlew", ":user-service:test", "--no-daemon", "--info"]
