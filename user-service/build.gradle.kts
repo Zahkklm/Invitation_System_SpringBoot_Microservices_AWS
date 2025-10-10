@@ -28,3 +28,9 @@ dependencies {
     testImplementation("org.testcontainers:postgresql")
     testImplementation("io.mockk:mockk:1.12.0")
 }
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2022.0.4")
+    }
+}
