@@ -10,7 +10,8 @@ import java.util.UUID
     name = "users",
     indexes = [
         Index(name = "idx_user_email", columnList = "email", unique = true),
-        Index(name = "idx_user_normalized_name", columnList = "normalizedName")
+        Index(name = "idx_user_normalized_name", columnList = "normalizedName"),
+        Index(name = "idx_user_cognito_sub", columnList = "cognitoSub", unique = true)
     ]
 )
 class User(
@@ -18,6 +19,9 @@ class User(
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     val id: UUID = UUID.randomUUID(),
+
+    @Column(nullable = true, unique = true)
+    var cognitoSub: String? = null,
 
     @Column(nullable = false, unique = true)
     var email: String,
@@ -36,13 +40,10 @@ class User(
     @Enumerated(EnumType.STRING)
     var role: Role,
 
-    @ManyToMany
-    @JoinTable(
-        name = "user_organizations",
-        joinColumns = [JoinColumn(name = "user_id")],
-        inverseJoinColumns = [JoinColumn(name = "organization_id")]
-    )
-    var organizations: MutableSet<Organization> = mutableSetOf(),
+    @ElementCollection
+    @CollectionTable(name = "user_organizations", joinColumns = [JoinColumn(name = "user_id")])
+    @Column(name = "organization_id")
+    var organizationIds: MutableSet<UUID> = mutableSetOf(),
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
     var updatedAt: LocalDateTime = LocalDateTime.now(),

@@ -24,6 +24,11 @@ class UserService(private val userRepository: UserRepository) {
             throw IllegalArgumentException("Email already exists")
         }
 
+        // Check if cognitoSub already exists (if provided)
+        if (request.cognitoSub != null && userRepository.existsByCognitoSub(request.cognitoSub)) {
+            throw IllegalArgumentException("User with this Cognito ID already exists")
+        }
+
         val normalizedName = normalizeFullName(request.fullName)
         
         val status = when (request.role) {
@@ -33,6 +38,7 @@ class UserService(private val userRepository: UserRepository) {
         }
 
         val user = User(
+            cognitoSub = request.cognitoSub,
             email = request.email,
             fullName = request.fullName,
             normalizedName = normalizedName,
@@ -87,6 +93,7 @@ class UserService(private val userRepository: UserRepository) {
 
     private fun User.toResponse() = UserResponse(
         id = id.toString(),
+        cognitoSub = cognitoSub,
         email = email,
         fullName = fullName,
         normalizedName = normalizedName,
