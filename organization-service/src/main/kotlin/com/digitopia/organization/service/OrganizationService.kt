@@ -3,6 +3,8 @@ package com.digitopia.organization.service
 import com.digitopia.common.exception.DuplicateResourceException
 import com.digitopia.common.exception.ResourceNotFoundException
 import com.digitopia.common.util.TextSanitizer
+import com.digitopia.organization.client.UserResponse
+import com.digitopia.organization.client.UserServiceClient
 import com.digitopia.organization.dto.CreateOrganizationRequest
 import com.digitopia.organization.dto.OrganizationResponse
 import com.digitopia.organization.dto.UpdateOrganizationRequest
@@ -16,7 +18,10 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Service
-class OrganizationService(private val organizationRepository: OrganizationRepository) {
+class OrganizationService(
+    private val organizationRepository: OrganizationRepository,
+    private val userServiceClient: UserServiceClient
+) {
 
     @Transactional
     fun createOrganization(request: CreateOrganizationRequest, creatorId: UUID): OrganizationResponse {
@@ -77,6 +82,15 @@ class OrganizationService(private val organizationRepository: OrganizationReposi
         return organizationRepository.findByRegistryNumber(registryNumber)
             .orElseThrow { ResourceNotFoundException("Organization not found") }
             .toResponse()
+    }
+
+    fun getUsersByOrganizationId(organizationId: UUID): List<UserResponse> {
+        // Verify organization exists
+        organizationRepository.findById(organizationId)
+            .orElseThrow { ResourceNotFoundException("Organization not found") }
+        
+        // Fetch users from User Service
+        return userServiceClient.getUsersByOrganizationId(organizationId)
     }
 
     private fun Organization.toResponse() = OrganizationResponse(

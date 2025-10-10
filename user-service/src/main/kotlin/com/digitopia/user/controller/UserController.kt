@@ -86,6 +86,22 @@ class UserController(private val userService: UserService) {
     }
 
     @Operation(
+        summary = "Get user by ID",
+        description = "Retrieves a user by their ID"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "User found"),
+        ApiResponse(responseCode = "404", description = "User not found")
+    ])
+    @GetMapping("/{id}")
+    fun getUserById(
+        @Parameter(description = "User ID")
+        @PathVariable id: UUID
+    ): ResponseEntity<UserResponse> {
+        return ResponseEntity.ok(userService.findById(id))
+    }
+
+    @Operation(
         summary = "Get user's organizations",
         description = "Returns all organization IDs that a user belongs to"
     )
@@ -99,5 +115,20 @@ class UserController(private val userService: UserService) {
         @PathVariable id: UUID
     ): ResponseEntity<Set<UUID>> {
         return ResponseEntity.ok(userService.getUserOrganizations(id))
+    }
+
+    @Operation(
+        summary = "Get users by organization ID",
+        description = "Returns all users belonging to a specific organization"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Users retrieved successfully")
+    ])
+    @GetMapping("/organization/{organizationId}")
+    fun getUsersByOrganizationId(
+        @Parameter(description = "Organization ID")
+        @PathVariable organizationId: UUID
+    ): ResponseEntity<List<UserResponse>> {
+        return ResponseEntity.ok(userService.findByOrganizationId(organizationId))
     }
 }

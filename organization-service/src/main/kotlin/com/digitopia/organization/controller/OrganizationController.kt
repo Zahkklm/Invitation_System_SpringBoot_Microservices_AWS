@@ -1,5 +1,6 @@
 package com.digitopia.organization.controller
 
+import com.digitopia.organization.client.UserResponse
 import com.digitopia.organization.dto.CreateOrganizationRequest
 import com.digitopia.organization.dto.OrganizationResponse
 import com.digitopia.organization.dto.UpdateOrganizationRequest
@@ -79,5 +80,18 @@ class OrganizationController(private val organizationService: OrganizationServic
         @PathVariable registryNumber: String
     ): ResponseEntity<OrganizationResponse> {
         return ResponseEntity.ok(organizationService.findByRegistryNumber(registryNumber))
+    }
+
+    @Operation(summary = "Get all users belonging to an organization")
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
+        ApiResponse(responseCode = "404", description = "Organization not found")
+    ])
+    @GetMapping("/{id}/users")
+    fun getUsersByOrganizationId(
+        @Parameter(description = "Organization ID")
+        @PathVariable id: UUID
+    ): ResponseEntity<List<UserResponse>> {
+        return ResponseEntity.ok(organizationService.getUsersByOrganizationId(id))
     }
 }

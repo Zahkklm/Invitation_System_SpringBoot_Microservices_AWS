@@ -114,6 +114,17 @@ class UserService(
         return user.organizationIds
     }
 
+    fun findById(id: UUID): UserResponse {
+        return userRepository.findById(id)
+            .orElseThrow { EntityNotFoundException("User not found") }
+            .toResponse()
+    }
+
+    fun findByOrganizationId(organizationId: UUID): List<UserResponse> {
+        return userRepository.findByOrganizationId(organizationId)
+            .map { it.toResponse() }
+    }
+
     fun searchByNormalizedName(name: String, pageable: Pageable): Page<UserResponse> {
         return userRepository.findByNormalizedNameContaining(
             normalizeFullName(name),
