@@ -84,11 +84,4 @@ class UserController(private val userService: UserService) {
     ): ResponseEntity<UserResponse> {
         return ResponseEntity.ok(userService.findByEmail(email))
     }
-
-    @Operation(
-        summary = "Health check endpoint",
-        description = "Returns the health status of the User Service"
-    )
-    @GetMapping("/healtz")
-    fun healthCheck() = ResponseEntity.ok(mapOf("status" to "UP"))
 }

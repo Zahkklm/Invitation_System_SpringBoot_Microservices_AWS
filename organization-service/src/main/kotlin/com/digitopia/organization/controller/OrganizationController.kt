@@ -80,8 +80,4 @@ class OrganizationController(private val organizationService: OrganizationServic
     ): ResponseEntity<OrganizationResponse> {
         return ResponseEntity.ok(organizationService.findByRegistryNumber(registryNumber))
     }
-
-    @Operation(summary = "Health check endpoint")
-    @GetMapping("/healtz")
-    fun healthCheck() = ResponseEntity.ok(mapOf("status" to "UP"))
 }

@@ -61,8 +61,4 @@ class InvitationController(private val invitationService: InvitationService) {
     ): ResponseEntity<List<InvitationResponse>> {
         return ResponseEntity.ok(invitationService.getInvitationsByOrganization(organizationId))
     }
-
-    @Operation(summary = "Health check endpoint")
-    @GetMapping("/healtz")
-    fun healthCheck() = ResponseEntity.ok(mapOf("status" to "UP"))
 }
