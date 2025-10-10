@@ -34,23 +34,40 @@ services:
       - backend
 
   eureka-server:
-    build: ./eureka-server
+    build:
+      context: .                              # ✅ Build from root
+      dockerfile: eureka-server/Dockerfile    # ✅ Use this Dockerfile
     ports:
       - "8761:8761"
     networks:
       - backend
+    healthcheck:
+      test: "curl --fail --silent localhost:8761/actuator/health | grep UP || exit 1"
+      interval: 1s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
     ports:
       - "8080:8080"
+    environment:
+      - COGNITO_REGION=${COGNITO_REGION}
+      - COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}
+      - COGNITO_JWK_SET_URI=${COGNITO_JWK_SET_URI}
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
     networks:
       - backend
 
   user-service:
-    build: ./user-service
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/user_service_db
       SPRING_DATASOURCE_USERNAME: user_service_user
@@ -58,13 +75,17 @@ services:
     ports:
       - "8084:8084"
     depends_on:
-      - postgres-user
-      - eureka-server
+      postgres-user:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
     networks:
       - backend
 
   organization-service:
-    build: ./organization-service
+    build:
+      context: .
+      dockerfile: organization-service/Dockerfile
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-org:5432/organization_service_db
       SPRING_DATASOURCE_USERNAME: org_service_user
@@ -72,13 +93,17 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - postgres-org
-      - eureka-server
+      postgres-org:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
     networks:
       - backend
 
   invitation-service:
-    build: ./invitation-service
+    build:
+      context: .
+      dockerfile: invitation-service/Dockerfile
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-inv:5432/invitation_service_db
       SPRING_DATASOURCE_USERNAME: invitation_service_user
@@ -86,8 +111,10 @@ services:
     ports:
       - "8085:8085"
     depends_on:
-      - postgres-inv
-      - eureka-server
+      postgres-inv:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
     networks:
       - backend
 
