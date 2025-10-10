@@ -9,12 +9,29 @@ A comprehensive event-driven microservices system for managing users, organizati
 
 ---
 
+## ☁️ AWS Deployment Status
+
+**✅ DEPLOYED TO AWS ECS:**
+- Docker images pushed to ECR
+- ECS cluster created: `digitopia-cluster`
+- Task definitions ready
+
+**📖 Deployment Guides:**
+- **Quick Deploy**: See `SIMPLE_AWS_DEPLOY.md` - Push images to ECR (✅ DONE)
+- **Service Setup**: See `AWS_SERVICE_DEPLOYMENT_GUIDE.md` - Deploy services to Fargate
+- **Full Guide**: See `AWS_ECS_FARGATE_DEPLOYMENT.md` - Complete AWS setup
+
+**🎯 Next Steps:** See `AWS_SERVICE_DEPLOYMENT_GUIDE.md` for deploying services
+
+---
+
 ## 📚 Documentation Website
 
 **View the complete documentation as a professional website:**
 
 ```bash
 # Start the documentation server
+pip install mkdocs
 mkdocs serve
 ```
 
@@ -27,13 +44,6 @@ The documentation includes:
 - 💰 Cost Calculator
 - 🧪 Testing Guide
 - And much more!
-
-**Deploy to GitHub Pages (FREE hosting):**
-```bash
-mkdocs gh-deploy
-```
-
-Your docs will be live at: `https://zahkklm.github.io/Invitation_System_SpringBoot_Microservices_AWS/`
 
 ---
 
