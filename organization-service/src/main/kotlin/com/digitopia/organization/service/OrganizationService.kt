@@ -93,6 +93,15 @@ class OrganizationService(
         return userServiceClient.getUsersByOrganizationId(organizationId)
     }
 
+    @Transactional
+    fun deleteOrganization(id: UUID) {
+        if (!organizationRepository.existsById(id)) {
+            throw ResourceNotFoundException("Organization not found")
+        }
+        // Hard delete - removes the organization completely
+        organizationRepository.deleteById(id)
+    }
+
     private fun Organization.toResponse() = OrganizationResponse(
         id = id.toString(),
         name = name,

@@ -94,4 +94,18 @@ class OrganizationController(private val organizationService: OrganizationServic
     ): ResponseEntity<List<UserResponse>> {
         return ResponseEntity.ok(organizationService.getUsersByOrganizationId(id))
     }
+
+    @Operation(summary = "Delete an organization")
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "204", description = "Organization deleted successfully"),
+        ApiResponse(responseCode = "404", description = "Organization not found")
+    ])
+    @DeleteMapping("/{id}")
+    fun deleteOrganization(
+        @Parameter(description = "Organization ID")
+        @PathVariable id: UUID
+    ): ResponseEntity<Void> {
+        organizationService.deleteOrganization(id)
+        return ResponseEntity.noContent().build()
+    }
 }

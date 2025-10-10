@@ -61,4 +61,18 @@ class InvitationController(private val invitationService: InvitationService) {
     ): ResponseEntity<List<InvitationResponse>> {
         return ResponseEntity.ok(invitationService.getInvitationsByOrganization(organizationId))
     }
+
+    @Operation(summary = "Delete an invitation")
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "204", description = "Invitation deleted successfully"),
+        ApiResponse(responseCode = "404", description = "Invitation not found")
+    ])
+    @DeleteMapping("/{id}")
+    fun deleteInvitation(
+        @Parameter(description = "Invitation ID")
+        @PathVariable id: UUID
+    ): ResponseEntity<Void> {
+        invitationService.deleteInvitation(id)
+        return ResponseEntity.noContent().build()
+    }
 }

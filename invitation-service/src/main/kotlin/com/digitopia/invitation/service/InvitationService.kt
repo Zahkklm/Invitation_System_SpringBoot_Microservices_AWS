@@ -107,6 +107,15 @@ class InvitationService(
     fun getInvitationsByOrganization(organizationId: UUID): List<InvitationResponse> =
         invitationRepository.findByOrganizationId(organizationId).map { it.toResponse() }
 
+    @Transactional
+    fun deleteInvitation(id: UUID) {
+        if (!invitationRepository.existsById(id)) {
+            throw ResourceNotFoundException("Invitation not found")
+        }
+        // Hard delete - removes the invitation completely
+        invitationRepository.deleteById(id)
+    }
+
     // Scheduled job to expire invitations older than 7 days
     @Scheduled(cron = "0 0 2 * * *") // Every day at 2am
     @Transactional

@@ -131,4 +131,22 @@ class UserController(private val userService: UserService) {
     ): ResponseEntity<List<UserResponse>> {
         return ResponseEntity.ok(userService.findByOrganizationId(organizationId))
     }
+
+    @Operation(
+        summary = "Delete user",
+        description = "Soft deletes a user by setting status to DELETED"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "204", description = "User deleted successfully"),
+        ApiResponse(responseCode = "404", description = "User not found")
+    ])
+    @DeleteMapping("/{id}")
+    fun deleteUser(
+        @Parameter(description = "User ID")
+        @PathVariable id: UUID,
+        @RequestHeader("X-User-Id") deleterId: UUID
+    ): ResponseEntity<Void> {
+        userService.deleteUser(id, deleterId)
+        return ResponseEntity.noContent().build()
+    }
 }

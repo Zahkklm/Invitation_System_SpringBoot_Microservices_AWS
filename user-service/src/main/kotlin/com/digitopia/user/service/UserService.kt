@@ -138,6 +138,20 @@ class UserService(
             .toResponse()
     }
 
+    @Transactional
+    fun deleteUser(id: UUID, deleterId: UUID) {
+        val user = userRepository.findById(id)
+            .orElseThrow { EntityNotFoundException("User not found") }
+        
+        // Soft delete: Update status to DELETED instead of hard delete
+        user.status = UserStatus.DELETED
+        user.updatedAt = LocalDateTime.now()
+        user.updatedBy = deleterId
+        userRepository.save(user)
+        
+        // Could also do hard delete: userRepository.deleteById(id)
+    }
+
     private fun normalizeFullName(fullName: String): String {
         return fullName.lowercase()
             .replace(Regex("[^a-z0-9\\s]"), "")
