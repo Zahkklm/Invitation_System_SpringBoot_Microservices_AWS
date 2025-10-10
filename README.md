@@ -560,6 +560,45 @@ curl -X POST http://localhost:8080/api/v1/users \
 
 ## 🧪 Testing
 
+### Automated Unit Tests (Docker-Based) ✅
+
+**Complete test suite with isolated test databases!**
+
+Run all tests in Docker containers:
+```bash
+# Windows PowerShell
+.\run-tests.ps1
+
+# Linux/Mac
+./run-tests.sh
+```
+
+**What it does:**
+- Spins up isolated PostgreSQL test databases (ports 5434-5436)
+- Runs unit tests for all 3 microservices
+- Automatic cleanup after completion
+- **Status:** ✅ All tests passing!
+
+**Test Results:**
+- ✅ **User Service**: 8 repository tests + 15 service tests
+- ✅ **Organization Service**: 8 repository tests
+- ✅ **Invitation Service**: 10 repository tests
+
+**Manual test execution:**
+```bash
+# Individual service tests
+./gradlew :user-service:test
+./gradlew :organization-service:test
+./gradlew :invitation-service:test
+
+# All tests
+./gradlew test
+```
+
+See [TESTING.md](TESTING.md) for detailed testing documentation.
+
+---
+
 ### Quick End-to-End Test
 
 See [QUICK_START.md](QUICK_START.md) for detailed testing instructions.
@@ -602,16 +641,6 @@ curl http://localhost:8084/api/v1/users/<USER_ID>/organizations
 curl http://localhost:8082/api/v1/organizations/<ORG_ID>/users
 # Should include the user
 ```
-
-### Unit & Integration Tests
-
-**Status:** Test suite implementation in progress
-
-Planned test coverage:
-- [ ] Unit tests for repositories (JUnit 5)
-- [ ] Integration tests for controllers
-- [ ] API tests for end-to-end flows
-- [ ] Kafka event processing tests
 
 ---
 
@@ -765,6 +794,391 @@ spring_boot_microservices/
 - **[QUICK_START.md](QUICK_START.md)** - Quick testing guide with curl examples
 - **[FINAL_IMPLEMENTATION_SUMMARY.md](FINAL_IMPLEMENTATION_SUMMARY.md)** - Comprehensive implementation summary
 - **[HEALTH_ENDPOINTS.md](HEALTH_ENDPOINTS.md)** - Health check migration guide
+
+---
+
+## ☁️ AWS Deployment Guide
+
+### Deployment Options
+
+This project can be deployed to AWS using several approaches. Here are the recommended options from **easiest to most advanced**:
+
+#### **Option 1: AWS Elastic Beanstalk with Docker (Easiest) ⭐ RECOMMENDED**
+
+**Best for:** Quick deployment, automatic scaling, managed infrastructure
+
+**Steps:**
+
+1. **Prepare your application:**
+```bash
+# Ensure all services are containerized
+docker-compose build
+```
+
+2. **Install AWS CLI and EB CLI:**
+```bash
+pip install awsebcli awscli
+aws configure  # Enter your AWS credentials
+```
+
+3. **Create Elastic Beanstalk environment:**
+```bash
+# Initialize EB in your project
+eb init -p docker digitopia-invitation-system --region us-east-1
+
+# Create environment with docker-compose
+eb create digitopia-prod --instance-type t3.medium
+```
+
+4. **Deploy:**
+```bash
+eb deploy
+```
+
+**Estimated Cost:** ~$50-100/month for small-medium load  
+**Setup Time:** 15-30 minutes  
+**Auto-scaling:** ✅ Yes  
+**Load Balancing:** ✅ Automatic
+
+---
+
+#### **Option 2: AWS ECS Fargate (Moderate Complexity)**
+
+**Best for:** Serverless containers, pay-per-use, no EC2 management
+
+**Steps:**
+
+1. **Push Docker images to ECR:**
+```bash
+# Login to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
+
+# Create repositories
+aws ecr create-repository --repository-name digitopia/user-service
+aws ecr create-repository --repository-name digitopia/organization-service
+aws ecr create-repository --repository-name digitopia/invitation-service
+aws ecr create-repository --repository-name digitopia/api-gateway
+aws ecr create-repository --repository-name digitopia/eureka-server
+
+# Tag and push images
+docker tag user-service:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/digitopia/user-service:latest
+docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/digitopia/user-service:latest
+
+# Repeat for other services...
+```
+
+2. **Set up RDS for PostgreSQL:**
+```bash
+aws rds create-db-instance \
+  --db-instance-identifier digitopia-postgres \
+  --db-instance-class db.t3.micro \
+  --engine postgres \
+  --master-username admin \
+  --master-user-password YourSecurePassword123! \
+  --allocated-storage 20 \
+  --publicly-accessible
+```
+
+3. **Set up Amazon MSK (Managed Kafka):**
+```bash
+aws kafka create-cluster \
+  --cluster-name digitopia-kafka \
+  --broker-node-group-info file://broker-config.json \
+  --kafka-version 3.5.1
+```
+
+4. **Create ECS Task Definitions and Services** via AWS Console or CloudFormation
+
+**Estimated Cost:** ~$100-200/month  
+**Setup Time:** 1-2 hours  
+**Auto-scaling:** ✅ Yes  
+**Serverless:** ✅ Yes (Fargate)
+
+---
+
+#### **Option 3: AWS EKS (Kubernetes) (Advanced)**
+
+**Best for:** Large-scale applications, complex orchestration, multi-cloud
+
+**Steps:**
+
+1. **Create EKS cluster:**
+```bash
+eksctl create cluster \
+  --name digitopia-cluster \
+  --region us-east-1 \
+  --nodegroup-name standard-workers \
+  --node-type t3.medium \
+  --nodes 3
+```
+
+2. **Deploy with Kubernetes manifests:**
+```bash
+kubectl apply -f k8s/
+```
+
+**Estimated Cost:** ~$150-300/month (cluster + nodes)  
+**Setup Time:** 2-4 hours  
+**Complexity:** High  
+**Best for:** Enterprise-scale
+
+---
+
+### Quick Start: Deploy with Elastic Beanstalk (5 Minutes) 🚀
+
+**The absolute easiest way to deploy your entire stack:**
+
+1. **Install prerequisites:**
+```bash
+pip install awsebcli
+aws configure
+```
+
+2. **Create a `Dockerrun.aws.json` file** (already configured for multi-container):
+```json
+{
+  "AWSEBDockerrunVersion": 2,
+  "volumes": [],
+  "containerDefinitions": [
+    {
+      "name": "eureka-server",
+      "image": "eureka-server:latest",
+      "essential": true,
+      "memory": 512,
+      "portMappings": [
+        {
+          "hostPort": 8761,
+          "containerPort": 8761
+        }
+      ]
+    },
+    {
+      "name": "api-gateway",
+      "image": "api-gateway:latest",
+      "essential": true,
+      "memory": 512,
+      "portMappings": [
+        {
+          "hostPort": 8080,
+          "containerPort": 8080
+        }
+      ],
+      "links": ["eureka-server"]
+    }
+  ]
+}
+```
+
+3. **Deploy:**
+```bash
+# Initialize (one-time)
+eb init -p "Multi-container Docker" digitopia --region us-east-1
+
+# Create environment and deploy
+eb create digitopia-prod
+
+# For updates
+eb deploy
+```
+
+4. **Configure environment variables:**
+```bash
+eb setenv \
+  AWS_COGNITO_USER_POOL_ID=your-pool-id \
+  AWS_COGNITO_CLIENT_ID=your-client-id \
+  SPRING_DATASOURCE_URL=jdbc:postgresql://your-rds-endpoint:5432/digitopia \
+  KAFKA_BOOTSTRAP_SERVERS=your-msk-endpoint:9092
+```
+
+5. **Access your application:**
+```bash
+eb open  # Opens the application in your browser
+```
+
+---
+
+### AWS Infrastructure Requirements
+
+#### Required Services:
+
+| Service | Purpose | Estimated Cost |
+|---------|---------|----------------|
+| **RDS PostgreSQL** | 3 databases (user, org, invitation) | $15-30/month |
+| **Amazon MSK** | Managed Kafka for events | $50-80/month |
+| **Elastic Beanstalk** | Application hosting | $30-60/month |
+| **Cognito** | User authentication | Free tier (50k users) |
+| **CloudWatch** | Logging & monitoring | $5-15/month |
+| **Route 53** | DNS (optional) | $1/month |
+| **Total** | | **~$100-200/month** |
+
+#### Managed Services Setup:
+
+**1. Amazon RDS (PostgreSQL):**
+- Create 1 RDS instance with 3 databases
+- Or create 3 separate micro instances
+- Enable automated backups
+- Configure security groups
+
+**2. Amazon MSK (Kafka):**
+- 3 broker nodes recommended
+- Enable in-transit encryption
+- Configure VPC and subnets
+
+**3. AWS Cognito:**
+- Already configured in your project
+- No changes needed
+
+---
+
+### Production Deployment Checklist
+
+- [ ] Set up RDS PostgreSQL with automated backups
+- [ ] Create Amazon MSK cluster for Kafka
+- [ ] Configure AWS Cognito User Pool
+- [ ] Push Docker images to ECR
+- [ ] Set up environment variables in Elastic Beanstalk
+- [ ] Configure security groups (allow traffic between services)
+- [ ] Set up CloudWatch alarms for monitoring
+- [ ] Configure Route 53 for custom domain (optional)
+- [ ] Enable HTTPS with AWS Certificate Manager
+- [ ] Set up auto-scaling policies
+- [ ] Configure database connection pooling
+- [ ] Enable application logs forwarding to CloudWatch
+
+---
+
+### Simplified Deployment Script
+
+Create `deploy-to-aws.sh`:
+
+```bash
+#!/bin/bash
+
+echo "🚀 Deploying Digitopia to AWS Elastic Beanstalk..."
+
+# Build Docker images
+echo "📦 Building Docker images..."
+docker-compose build
+
+# Initialize EB (first time only)
+if [ ! -d ".elasticbeanstalk" ]; then
+  echo "🎯 Initializing Elastic Beanstalk..."
+  eb init -p "Multi-container Docker" digitopia --region us-east-1
+fi
+
+# Deploy
+echo "🌍 Deploying to AWS..."
+eb deploy
+
+# Show status
+echo "✅ Deployment complete!"
+echo "🔗 Application URL:"
+eb status | grep CNAME
+
+echo "📊 View logs:"
+echo "   eb logs"
+echo ""
+echo "🌐 Open application:"
+echo "   eb open"
+```
+
+Make it executable and run:
+```bash
+chmod +x deploy-to-aws.sh
+./deploy-to-aws.sh
+```
+
+---
+
+### Alternative: One-Click AWS Deployment
+
+Use **AWS Copilot** for the absolute easiest deployment:
+
+```bash
+# Install AWS Copilot
+curl -Lo copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-linux && chmod +x copilot
+
+# Initialize application
+copilot app init digitopia
+
+# Deploy all services
+copilot init --app digitopia --name user-service --type "Load Balanced Web Service" --dockerfile ./user-service/Dockerfile --port 8084
+copilot init --app digitopia --name org-service --type "Load Balanced Web Service" --dockerfile ./organization-service/Dockerfile --port 8082
+copilot init --app digitopia --name invitation-service --type "Load Balanced Web Service" --dockerfile ./invitation-service/Dockerfile --port 8085
+
+# Deploy
+copilot deploy --all
+```
+
+**AWS Copilot handles:**
+- ✅ VPC creation
+- ✅ Load balancer setup
+- ✅ ECS cluster creation
+- ✅ Service discovery
+- ✅ Auto-scaling
+- ✅ Logging
+
+---
+
+### Cost Optimization Tips
+
+1. **Use AWS Free Tier:**
+   - RDS db.t3.micro (750 hours/month free for 12 months)
+   - EC2 t3.micro instances
+   - Cognito (50,000 MAUs free)
+
+2. **Right-size instances:**
+   - Start with t3.small for services
+   - Monitor and adjust based on load
+
+3. **Use Spot Instances** for ECS/EKS (50-70% cost savings)
+
+4. **Enable auto-scaling** to handle traffic spikes efficiently
+
+5. **Use Amazon Aurora Serverless** for PostgreSQL (pay per use)
+
+---
+
+### Monitoring & Observability
+
+After deployment, monitor your application:
+
+```bash
+# View logs
+eb logs
+
+# Monitor health
+eb health
+
+# SSH into instance (if needed)
+eb ssh
+
+# View CloudWatch metrics
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/ElasticBeanstalk \
+  --metric-name EnvironmentHealth \
+  --dimensions Name=EnvironmentName,Value=digitopia-prod \
+  --start-time 2025-01-01T00:00:00Z \
+  --end-time 2025-01-01T23:59:59Z \
+  --period 3600 \
+  --statistics Average
+```
+
+---
+
+### Troubleshooting Common Issues
+
+**Issue:** Services can't connect to RDS  
+**Solution:** Check security group rules, ensure RDS is accessible from EB environment
+
+**Issue:** Kafka connection timeout  
+**Solution:** Verify MSK endpoint, check VPC configuration
+
+**Issue:** High memory usage  
+**Solution:** Increase instance type or optimize JVM settings
+
+**Issue:** 502 Bad Gateway  
+**Solution:** Check service health endpoints, verify port mappings
 
 ---
 
