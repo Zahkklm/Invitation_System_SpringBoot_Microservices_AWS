@@ -150,6 +150,21 @@ POST /api/v1/auth/signin
   - [ ] Integration tests
   - [ ] API tests
 
+## User Data Strategy
+
+### Where to Store User Information
+
+- **AWS Cognito** is used for authentication and identity management. It stores user credentials, handles registration, login, and issues JWTs containing user identity (such as `sub`, `email`, etc.).
+- **User Service** is the source of truth for all application-specific user data (such as user profile, preferences, roles, and business-related information). It manages the internal `user_id` used throughout your microservices.
+- On first login or registration, the User Service should create a user record that maps Cognito's `sub` (subject) to your internal `user_id`.
+- All other services reference users by the `user_id` managed by the User Service, not by Cognito’s internal IDs.
+
+**Summary:**
+- Use Cognito for authentication and identity.
+- Use the User Service for all business/user data and as the source of truth for user references across services.
+
+This approach gives you flexibility, control, and avoids vendor lock-in for your application’s user model.
+
 ## Project Structure
 ```
 .
